@@ -1,0 +1,389 @@
+// app.js
+'use strict';
+
+(function () {
+  // ---------- Tutorial data ----------
+  const tutorials = [
+    { id: 1, title: "Yoga for Beginners", category: "yoga", description: "Learn the fundamentals of yoga with this comprehensive beginner's guide.", price: 29.99, rating: 4.8, image: "images/yoga-beginner.jpg" },
+    { id: 2, title: "Strength Training Fundamentals", category: "strength", description: "Build muscle and strength with proper form and technique.", price: 39.99, rating: 4.9, image: "images/strength-training.jpg" },
+    { id: 3, title: "HIIT Cardio Workouts", category: "cardio", description: "High-intensity interval training for maximum fat burning.", price: 34.99, rating: 4.7, image: "images/hiit-cardio.jpg" },
+    { id: 4, title: "Nutrition for Muscle Gain", category: "nutrition", description: "Learn how to fuel your body for optimal muscle growth.", price: 24.99, rating: 4.6, image: "images/nutrition-muscle.jpg" },
+    { id: 5, title: "Advanced Yoga Poses", category: "yoga", description: "Take your practice to the next level with advanced asanas.", price: 44.99, rating: 4.9, image: "images/advanced-yoga.jpg" },
+    { id: 6, title: "Powerlifting Program", category: "strength", description: "A complete program to increase your squat, bench, and deadlift.", price: 49.99, rating: 5.0, image: "images/powerlifting.jpg" }
+  ];
+
+  // ---------- Safe DOM helpers ----------
+  const $id = (id) => document.getElementById(id);
+  const $el = (sel) => document.querySelector(sel);
+  const $all = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const safeAddListener = (el, evt, fn) => { if (!el) return; el.addEventListener(evt, fn); };
+
+  // ---------- Safe localStorage parse ----------
+  let cart = [];
+  try {
+    const raw = localStorage.getItem('cart');
+    cart = raw ? JSON.parse(raw) : [];
+    // sanitize: ensure quantity is number and id is number
+    cart = cart.map(item => ({ ...item, id: Number(item.id), quantity: Number(item.quantity) || 1 }));
+  } catch (e) {
+    console.warn('Could not parse cart from localStorage — starting with empty cart.', e);
+    cart = [];
+    localStorage.removeItem('cart');
+  }
+
+  // ---------- DOM elements (may be null if not in page) ----------
+  const tutorialsContainer = $id('tutorials-container');
+  const filterButtons = $all('.filter-btn');
+  const cartBtn = $id('cart-btn');
+  const cartModal = $id('cart-modal');
+  const closeCartBtn = $el('.close-cart');
+  const cartItems = $id('cart-items');
+  const cartTotalPrice = $id('cart-total-price');
+  const checkoutBtn = $id('checkout-btn');
+  const loginBtn = $el('.btn-login');
+  const loginModal = $id('login-modal');
+  const closeLoginBtn = $el('.close-login');
+  const mobileMenuBtn = $el('.mobile-menu-btn');
+  const nav = $el('.nav');
+  const exploreTutorialsBtn = $id('explore-tutorials');
+  const cartCountEl = $el('.cart-count');
+
+  // ---------- Initialization ----------
+  document.addEventListener('DOMContentLoaded', function () {
+    // Render tutorials if container exists
+    if (tutorialsContainer) displayTutorials(tutorials);
+
+    updateCartCount();
+
+    // Filters
+    if (filterButtons.length) {
+      filterButtons.forEach(button => {
+        safeAddListener(button, 'click', function () {
+          const filter = this.getAttribute('data-filter') || 'all';
+
+          // Update active class
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          this.classList.add('active');
+
+          // Display
+          if (filter === 'all') displayTutorials(tutorials);
+          else displayTutorials(tutorials.filter(t => t.category === filter));
+        });
+      });
+    }
+
+    // Cart - open/close
+    safeAddListener(cartBtn, 'click', openCart);
+    safeAddListener(closeCartBtn, 'click', closeCartModal);
+    safeAddListener(checkoutBtn, 'click', proceedToCheckout);
+
+    // Login
+    safeAddListener(loginBtn, 'click', openLogin);
+    safeAddListener(closeLoginBtn, 'click', closeLoginModal);
+
+    // Mobile menu toggle
+    safeAddListener(mobileMenuBtn, 'click', toggleMobileMenu);
+
+    // Smooth scroll for in-page links (defensive)
+    $all('a[href^="#"]').forEach(anchor => {
+      safeAddListener(anchor, 'click', function (e) {
+        e.preventDefault();
+        const href = this.getAttribute('href');
+        if (!href || href === '#') return;
+        const target = document.querySelector(href);
+        if (target) {
+          window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
+          if (nav && nav.classList.contains('active')) toggleMobileMenu();
+        }
+      });
+    });
+
+    // Explore button
+    safeAddListener(exploreTutorialsBtn, 'click', function () {
+      const t = document.querySelector('#tutorials');
+      if (t) t.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Close modals by clicking outside (defensive)
+    window.addEventListener('click', function (e) {
+      if (cartModal && e.target === cartModal) closeCartModal();
+      if (loginModal && e.target === loginModal) closeLoginModal();
+    });
+
+    // Accessibility: close modals with ESC
+    window.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        closeCartModal();
+        closeLoginModal();
+      }
+    });
+  });
+
+  // ---------- Display tutorials ----------
+  function displayTutorials(list) {
+    if (!tutorialsContainer) return;
+    tutorialsContainer.innerHTML = '';
+
+    if (!Array.isArray(list) || list.length === 0) {
+      tutorialsContainer.innerHTML = '<p>No tutorials found.</p>';
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    list.forEach(tutorial => {
+      const card = document.createElement('div');
+      card.className = 'tutorial-card';
+      card.innerHTML = `
+        <div class="tutorial-image">
+          <img src="${escapeHtml(tutorial.image)}" alt="${escapeHtml(tutorial.title)}" loading="lazy" />
+        </div>
+        <div class="tutorial-content">
+          <span class="tutorial-category">${escapeHtml(tutorial.category)}</span>
+          <h3>${escapeHtml(tutorial.title)}</h3>
+          <p class="tutorial-description">${escapeHtml(tutorial.description)}</p>
+          <div class="tutorial-meta">
+            <div class="tutorial-price">$${Number(tutorial.price).toFixed(2)}</div>
+            <div class="tutorial-rating" aria-label="Rating ${tutorial.rating}">⭐ ${tutorial.rating}</div>
+          </div>
+          <button class="add-to-cart" data-id="${tutorial.id}" aria-label="Add ${escapeHtml(tutorial.title)} to cart">Add to Cart</button>
+        </div>
+      `;
+      fragment.appendChild(card);
+    });
+
+    tutorialsContainer.appendChild(fragment);
+
+    // wire up add-to-cart buttons (delegation would be better for performance)
+    $all('.add-to-cart').forEach(btn => {
+      safeAddListener(btn, 'click', function () {
+        const tid = parseInt(this.getAttribute('data-id'), 10);
+        if (!Number.isNaN(tid)) addToCart(tid);
+      });
+    });
+  }
+
+  // ---------- Cart logic ----------
+  function addToCart(tutorialId) {
+    const tutorial = tutorials.find(t => Number(t.id) === Number(tutorialId));
+    if (!tutorial) {
+      showNotification('Item not found.', true);
+      return;
+    }
+
+    const existing = cart.find(i => Number(i.id) === Number(tutorialId));
+    if (existing) existing.quantity = (Number(existing.quantity) || 0) + 1;
+    else cart.push({ ...cloneTutorialForCart(tutorial), quantity: 1 });
+
+    updateCartCount();
+    saveCartToStorage();
+
+    // refresh cart display if modal open
+    if (cartModal && window.getComputedStyle(cartModal).display !== 'none') {
+      updateCartDisplay();
+    }
+
+    showNotification(`${tutorial.title} added to cart!`);
+  }
+
+  function removeFromCart(tutorialId) {
+    cart = cart.filter(i => Number(i.id) !== Number(tutorialId));
+    updateCartCount();
+    saveCartToStorage();
+    updateCartDisplay();
+  }
+
+  function updateCartCount() {
+    const total = cart.reduce((s, it) => s + (Number(it.quantity) || 0), 0);
+    if (cartCountEl) cartCountEl.textContent = total;
+    // if you also have other cart counters, update them here
+  }
+
+  function updateCartDisplay() {
+    if (!cartItems || !cartTotalPrice) return;
+
+    cartItems.innerHTML = '';
+
+    if (!cart || cart.length === 0) {
+      cartItems.innerHTML = '<p>Your cart is empty</p>';
+      cartTotalPrice.textContent = '$0.00';
+      return;
+    }
+
+    let total = 0;
+    const fragment = document.createDocumentFragment();
+
+    cart.forEach(item => {
+      const itemTotal = (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      total += itemTotal;
+
+      const itemEl = document.createElement('div');
+      itemEl.className = 'cart-item';
+      itemEl.innerHTML = `
+        <div class="cart-item-info">
+          <h4>${escapeHtml(item.title)}</h4>
+          <p>$${Number(item.price).toFixed(2)} x ${Number(item.quantity)}</p>
+        </div>
+        <div class="cart-item-actions">
+          <span class="cart-item-price">$${itemTotal.toFixed(2)}</span>
+          <button class="remove-item" data-id="${item.id}" aria-label="Remove ${escapeHtml(item.title)} from cart">&times;</button>
+        </div>
+      `;
+      fragment.appendChild(itemEl);
+    });
+
+    cartItems.appendChild(fragment);
+    cartTotalPrice.textContent = `$${total.toFixed(2)}`;
+
+    // remove handlers
+    $all('.remove-item').forEach(btn => {
+      safeAddListener(btn, 'click', function () {
+        const id = parseInt(this.getAttribute('data-id'), 10);
+        if (!Number.isNaN(id)) removeFromCart(id);
+      });
+    });
+  }
+
+  function openCart() {
+    updateCartDisplay();
+    if (cartModal) {
+      cartModal.style.display = 'flex';
+      cartModal.setAttribute('aria-hidden', 'false');
+    }
+  }
+
+  function closeCartModal() {
+    if (cartModal) {
+      cartModal.style.display = 'none';
+      cartModal.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  function proceedToCheckout() {
+    if (!cart || cart.length === 0) {
+      showNotification('Your cart is empty. Add items before checkout.', true);
+      return;
+    }
+
+    // This is a placeholder. Replace with real checkout flow / redirect.
+    try {
+      showNotification('Proceeding to checkout — you would be redirected to a payment processor.');
+      closeCartModal();
+    } catch (e) {
+      alert('Proceeding to checkout (fallback).');
+      closeCartModal();
+    }
+  }
+
+  function saveCartToStorage() {
+    try {
+      localStorage.setItem('cart', JSON.stringify(cart));
+    } catch (e) {
+      console.warn('Could not persist cart to localStorage.', e);
+    }
+  }
+
+  // ---------- Login modal ----------
+  function openLogin() {
+    if (!loginModal) return;
+    loginModal.style.display = 'flex';
+    loginModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeLoginModal() {
+    if (!loginModal) return;
+    loginModal.style.display = 'none';
+    loginModal.setAttribute('aria-hidden', 'true');
+  }
+
+  // ---------- Mobile menu toggle ----------
+  function toggleMobileMenu() {
+    if (!nav || !mobileMenuBtn) return;
+    nav.classList.toggle('active');
+
+    const spans = mobileMenuBtn.querySelectorAll('span');
+    if (!spans || spans.length < 3) return;
+
+    if (nav.classList.contains('active')) {
+      spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+      spans[1].style.opacity = '0';
+      spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+    } else {
+      spans[0].style.transform = 'none';
+      spans[1].style.opacity = '1';
+      spans[2].style.transform = 'none';
+    }
+  }
+
+  // ---------- Notifications ----------
+  function showNotification(message, isWarning = false) {
+    // try to use DOM notification if available
+    try {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.setAttribute('role', 'status');
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background-color: ${isWarning ? '#d9534f' : 'var(--primary-color, #2b8aef)'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 4px;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+        z-index: 1200;
+        transition: opacity 0.3s ease;
+      `;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+          if (notification && notification.parentNode) notification.parentNode.removeChild(notification);
+        }, 300);
+      }, 3000);
+    } catch (e) {
+      // fallback
+      try { alert(message); } catch (err) { console.log(message); }
+    }
+  }
+
+  // ---------- Utility helpers ----------
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return String(str ?? '');
+    return str.replace(/[&<>"'`=\/]/g, function (s) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+      })[s];
+    });
+  }
+
+  function cloneTutorialForCart(t) {
+    // Only copy minimal, serializable props for cart storage
+    return {
+      id: Number(t.id),
+      title: t.title,
+      price: Number(t.price) || 0,
+      image: t.image || '',
+      category: t.category || '',
+    };
+  }
+
+  // Expose some functions for debugging (optional)
+  window.__app = {
+    getCart: () => cart,
+    addToCart,
+    removeFromCart,
+    updateCartDisplay
+  };
+
+})();
