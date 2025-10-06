@@ -1,285 +1,134 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FitPro Tutorials | Premium Fitness Training</title>
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/responsive.css">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Open+Sans&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tutorials Store — Demo</title>
+  <style>
+    /* Minimal styling for demo */
+    :root { --primary-color: #2b8aef; --shadow: 0 6px 18px rgba(0,0,0,0.12); }
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; line-height: 1.4; }
+    header { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:#fff; border-bottom:1px solid #eee; position:sticky; top:0; z-index:50;}
+    .brand { font-weight:700; }
+    .nav { display:flex; gap:12px; align-items:center; }
+    .mobile-menu-btn { display:none; cursor:pointer; }
+    .mobile-menu-btn span { display:block; width:22px; height:2px; margin:4px 0; background:#333; transition:all .2s; }
+    .controls { display:flex; gap:8px; align-items:center; }
+    .cart-count { background:#ef4444; color:#fff; border-radius:999px; padding:2px 8px; font-size:13px; margin-left:6px; }
+
+    main { padding:20px; max-width:1100px; margin:0 auto; }
+    .filters { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+    .filter-btn { padding:8px 12px; border:1px solid #ddd; background:#fff; cursor:pointer; border-radius:6px; }
+    .filter-btn.active { background:var(--primary-color); color:#fff; border-color:transparent; }
+
+    #tutorials-container { display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:16px; }
+    .tutorial-card { border:1px solid #eee; padding:12px; border-radius:8px; background:#fff; display:flex; flex-direction:column; gap:8px; }
+    .tutorial-image img { width:100%; height:150px; object-fit:cover; border-radius:6px; }
+    .tutorial-meta { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+
+    /* Modal basic */
+    .modal { display:none; position:fixed; inset:0; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:800; }
+    .modal .dialog { background:#fff; padding:16px; width:90%; max-width:480px; border-radius:8px; position:relative; }
+    .close-cart, .close-login { position:absolute; top:8px; right:8px; background:none; border:none; font-size:22px; cursor:pointer; }
+
+    .cart-item { display:flex; justify-content:space-between; gap:12px; padding:8px 0; border-bottom:1px dashed #eee; }
+    .notification { /* created dynamically by JS */ }
+
+    /* Responsive small screens: show mobile menu icon */
+    @media (max-width:720px) {
+      .nav { display:none; }
+      .mobile-menu-btn { display:block; }
+    }
+  </style>
 </head>
 <body>
-    <!-- Header & Navigation -->
-    <header class="header">
-        <div class="container">
-            <div class="logo">
-                <a href="index.html">
-                    <img src="images/logo.png" alt="FitPro Tutorials">
-                    <span>FitPro Tutorials</span>
-                </a>
-            </div>
-            <nav class="nav">
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#tutorials">Tutorials</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#testimonials">Testimonials</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </nav>
-            <div class="header-actions">
-                <button class="btn-login">Login</button>
-                <button class="btn-cart" id="cart-btn">
-                    Cart <span class="cart-count">0</span>
-                </button>
-            </div>
-            <div class="mobile-menu-btn">
-                <span></span>
-                <span></span>
-                <span></span>
-            </div>
-        </div>
-    </header>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Transform Your Body With Expert Fitness Tutorials</h1>
-                <p>Learn from certified fitness professionals with step-by-step video tutorials designed for all fitness levels.</p>
-                <div class="hero-actions">
-                    <button class="btn-primary" id="explore-tutorials">Explore Tutorials</button>
-                    <button class="btn-secondary">Watch Free Demo</button>
-                </div>
-            </div>
-            <div class="hero-image">
-                <img src="images/hero-bg.jpg" alt="Fitness Training">
-            </div>
-        </div>
-    </section>
+  <header>
+    <div class="brand">Tutorials Store</div>
 
-    <!-- Features Section -->
-    <section class="features">
-        <div class="container">
-            <h2>Why Choose Our Tutorials?</h2>
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>Expert Instructors</h3>
-                    <p>Learn from certified fitness professionals with years of experience.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3>Access Anywhere</h3>
-                    <p>Stream tutorials on any device - desktop, tablet, or mobile.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔄</div>
-                    <h3>Lifetime Access</h3>
-                    <p>One-time purchase gives you lifetime access to all updates.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💬</div>
-                    <h3>Community Support</h3>
-                    <p>Join our community for tips, motivation, and support.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#tutorials">Tutorials</a>
+      <a href="#about">About</a>
+    </nav>
 
-    <!-- Tutorials Section -->
-    <section id="tutorials" class="tutorials">
-        <div class="container">
-            <h2>Popular Fitness Tutorials</h2>
-            <div class="tutorial-filters">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="yoga">Yoga</button>
-                <button class="filter-btn" data-filter="strength">Strength</button>
-                <button class="filter-btn" data-filter="cardio">Cardio</button>
-                <button class="filter-btn" data-filter="nutrition">Nutrition</button>
-            </div>
-            <div class="tutorials-grid" id="tutorials-container">
-                <!-- Tutorial cards will be dynamically loaded here -->
-            </div>
-        </div>
-    </section>
+    <div class="controls">
+      <button id="explore-tutorials">Explore</button>
 
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="container">
-            <div class="about-content">
-                <h2>About FitPro Tutorials</h2>
-                <p>We are a team of certified fitness professionals dedicated to making quality fitness education accessible to everyone. Our mission is to help you achieve your fitness goals through comprehensive, easy-to-follow video tutorials.</p>
-                <p>With over 50,000 satisfied customers worldwide, we've helped transform lives through our structured fitness programs.</p>
-                <div class="stats">
-                    <div class="stat">
-                        <h3>50K+</h3>
-                        <p>Happy Customers</p>
-                    </div>
-                    <div class="stat">
-                        <h3>100+</h3>
-                        <p>Video Tutorials</p>
-                    </div>
-                    <div class="stat">
-                        <h3>15+</h3>
-                        <p>Expert Trainers</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+      <button class="btn-login" aria-haspopup="dialog">Login</button>
 
-    <!-- Testimonials Section -->
-    <section id="testimonials" class="testimonials">
-        <div class="container">
-            <h2>What Our Customers Say</h2>
-            <div class="testimonials-slider">
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        <p>"The yoga tutorials completely transformed my practice. I've never felt better!"</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <img src="images/user1.jpg" alt="Sarah Johnson">
-                        <div>
-                            <h4>Sarah Johnson</h4>
-                            <span>Yoga Enthusiast</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        <p>"As a beginner, the strength training tutorials were perfect. The instructors explain everything clearly."</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <img src="images/user2.jpg" alt="Mike Rodriguez">
-                        <div>
-                            <h4>Mike Rodriguez</h4>
-                            <span>Fitness Beginner</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="testimonial-content">
-                        <p>"The nutrition guides helped me lose 15 pounds while building muscle. Highly recommended!"</p>
-                    </div>
-                    <div class="testimonial-author">
-                        <img src="images/user3.jpg" alt="Emily Chen">
-                        <div>
-                            <h4>Emily Chen</h4>
-                            <span>Weight Loss Success</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+      <button id="cart-btn" aria-haspopup="dialog" aria-controls="cart-modal">
+        Cart <span class="cart-count">0</span>
+      </button>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <div class="contact-content">
-                <h2>Get In Touch</h2>
-                <p>Have questions? We'd love to hear from you.</p>
-                <form class="contact-form">
-                    <div class="form-group">
-                        <input type="text" placeholder="Your Name" required>
-                    </div>
-                    <div class="form-group">
-                        <input type="email" placeholder="Your Email" required>
-                    </div>
-                    <div class="form-group">
-                        <textarea placeholder="Your Message" rows="5" required></textarea>
-                    </div>
-                    <button type="submit" class="btn-primary">Send Message</button>
-                </form>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <div class="logo">
-                        <a href="index.html">
-                            <img src="images/logo.png" alt="FitPro Tutorials">
-                            <span>FitPro Tutorials</span>
-                        </a>
-                    </div>
-                    <p>Premium fitness tutorials for your transformation journey.</p>
-                </div>
-                <div class="footer-section">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#tutorials">Tutorials</a></li>
-                        <li><a href="#about">About</a></li>
-                        <li><a href="#testimonials">Testimonials</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Support</h3>
-                    <ul>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h3>Newsletter</h3>
-                    <p>Subscribe for fitness tips and exclusive offers.</p>
-                    <form class="newsletter-form">
-                        <input type="email" placeholder="Your email address">
-                        <button type="submit">Subscribe</button>
-                    </form>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2023 FitPro Tutorials. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Shopping Cart Modal -->
-    <div class="cart-modal" id="cart-modal">
-        <div class="cart-content">
-            <div class="cart-header">
-                <h3>Your Cart</h3>
-                <button class="close-cart">&times;</button>
-            </div>
-            <div class="cart-items" id="cart-items">
-                <!-- Cart items will be dynamically loaded here -->
-            </div>
-            <div class="cart-total">
-                <p>Total: <span id="cart-total-price">$0.00</span></p>
-                <button class="btn-primary" id="checkout-btn">Proceed to Checkout</button>
-            </div>
-        </div>
+      <button class="mobile-menu-btn" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
+  </header>
 
-    <!-- Login Modal -->
-    <div class="login-modal" id="login-modal">
-        <div class="login-content">
-            <div class="login-header">
-                <h3>Login to Your Account</h3>
-                <button class="close-login">&times;</button>
-            </div>
-            <form class="login-form">
-                <div class="form-group">
-                    <input type="email" placeholder="Email" required>
-                </div>
-                <div class="form-group">
-                    <input type="password" placeholder="Password" required>
-                </div>
-                <button type="submit" class="btn-primary">Login</button>
-            </form>
-            <p>Don't have an account? <a href="#" id="show-signup">Sign up</a></p>
-        </div>
+  <main>
+    <section id="hero">
+      <h1>Welcome — Try the demo</h1>
+      <p>Use the filters and add items to your cart. This minimal HTML contains the IDs/classes used by <code>app.js</code>.</p>
+    </section>
+
+    <section class="filters" aria-label="Tutorial filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="yoga">Yoga</button>
+      <button class="filter-btn" data-filter="strength">Strength</button>
+      <button class="filter-btn" data-filter="cardio">Cardio</button>
+      <button class="filter-btn" data-filter="nutrition">Nutrition</button>
+    </section>
+
+    <section id="tutorials" aria-label="Tutorial list">
+      <div id="tutorials-container">
+        <!-- tutorial cards are injected here by app.js -->
+      </div>
+    </section>
+
+    <section id="about" style="margin-top:40px;">
+      <h2>About this demo</h2>
+      <p>This is a minimal test page. Replace placeholder images in <code>app.js</code> data with real image paths.</p>
+    </section>
+  </main>
+
+  <!-- Cart modal -->
+  <div id="cart-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="cart-title">
+    <div class="dialog" role="document">
+      <button class="close-cart" aria-label="Close cart">&times;</button>
+      <h3 id="cart-title">Your Cart</h3>
+      <div id="cart-items">
+        <!-- Cart items injected by app.js -->
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+        <strong>Total:</strong>
+        <div id="cart-total-price">$0.00</div>
+      </div>
+      <div style="margin-top:12px; text-align:right;">
+        <button id="checkout-btn">Checkout</button>
+      </div>
     </div>
+  </div>
 
-    <script src="js/main.js"></script>
-    <script src="js/checkout.js"></script>
+  <!-- Login modal -->
+  <div id="login-modal" class="modal" role="dialog" aria-hidden="true" aria-labelledby="login-title">
+    <div class="dialog" role="document">
+      <button class="close-login" aria-label="Close login">&times;</button>
+      <h3 id="login-title">Login</h3>
+      <p>(Demo login — no real auth)</p>
+      <form onsubmit="event.preventDefault(); alert('Demo login');">
+        <label>
+          Email
+          <input type="email" required />
+        </label>
+        <div style="margin-top:8px;">
+          <button type="submit">Sign in</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Include your app.js (make sure file is in same folder or update path) -->
+  <script src="app.js" defer></script>
 </body>
 </html>
